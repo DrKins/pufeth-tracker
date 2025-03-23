@@ -1,0 +1,51 @@
+services:
+  app:
+    build: .
+    container_name: pufeth-tracker
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/pufeth
+      - RPC_URL=${RPC_URL}
+      - API_URL=${API_URL}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  mongo:
+    image: mongo:6.0
+    container_name: pufeth-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  cron:
+    build: ./cron
+    image: alpine
+    volumes:
+      - ./cron/cron.sh:/app/cron.sh
+      - ./cron/crontab.txt:/etc/crontabs/root
+      - ./cron/wait-for-it.sh:/app/wait-for-it.sh
+    environment:
+      - API_URL=${API_URL}
+    command: ["/bin/sh", "-c", "/app/wait-for-it.sh"]
+    depends_on:
+      - mongo
+      - app
+
+volumes:
+  mongo-data:
