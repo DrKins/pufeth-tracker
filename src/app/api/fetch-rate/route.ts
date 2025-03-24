@@ -1,4 +1,3 @@
-import { ConversionRate as ConversionRateType } from "@/app/components/ConversionRateSection";
 import { ConversionRate } from "@/models/ConversionRate";
 import { ethers } from "ethers";
 import { NextResponse } from "next/server";
@@ -16,9 +15,13 @@ export async function GET() {
   try {
     await connectDB();
     const existingRecord = await ConversionRate.findOne();
-    return NextResponse.json(
-      existingRecord?.conversionRates as unknown as ConversionRateType[],
-    );
+
+    const conversionRates = existingRecord?.conversionRates.map((rate) => ({
+      rate: rate.rate,
+      timestamp: rate.timestamp.toISOString(),
+    }));
+
+    return NextResponse.json(conversionRates);
   } catch (error) {
     console.error("Error fetching conversion rate:", error);
     return NextResponse.json(

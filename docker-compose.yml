@@ -33,19 +33,5 @@ services:
       retries: 5
       start_period: 30s
 
-  cron:
-    build: ./cron
-    image: alpine
-    volumes:
-      - ./cron/cron.sh:/app/cron.sh
-      - ./cron/crontab.txt:/etc/crontabs/root
-      - ./cron/wait-for-it.sh:/app/wait-for-it.sh
-    environment:
-      - API_URL=${API_URL}
-    command: ["/bin/sh", "-c", "/app/wait-for-it.sh"]
-    depends_on:
-      - mongo
-      - app
-
 volumes:
   mongo-data:
